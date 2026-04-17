@@ -57,7 +57,13 @@ private fun SmpleAppUI() {
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
 
-    val mainRoutes = setOf(Screen.Home.route, Screen.WorkoutList.route, Screen.Profile.route)
+    val mainRoutes = setOf(
+        Screen.Home.route,
+        Screen.WorkoutList.route,
+        Screen.WorkoutPlanDetail.route,
+        Screen.WorkoutDetail.route,
+        Screen.Profile.route,
+    )
 
     Scaffold(
         containerColor = Color(0xFF34C759),
@@ -103,8 +109,17 @@ private fun SmpleBottomBar(navController: NavHostController, currentRoute: Strin
         tonalElevation = 0.dp,
         modifier = Modifier.height(80.dp),
     ) {
+        val workoutRoutes = setOf(
+            Screen.WorkoutList.route,
+            Screen.WorkoutPlanDetail.route,
+            Screen.WorkoutDetail.route,
+        )
         items.forEach { item ->
-            val selected = currentRoute == item.route
+            val selected = if (item.route == Screen.WorkoutList.route) {
+                currentRoute in workoutRoutes
+            } else {
+                currentRoute == item.route
+            }
             NavigationBarItem(
                 selected = selected,
                 onClick = {

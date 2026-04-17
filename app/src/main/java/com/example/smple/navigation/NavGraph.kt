@@ -8,6 +8,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
+import com.example.smple.ui.workouts.WorkoutDetailScreen
+import com.example.smple.ui.workouts.WorkoutListScreen
+import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
+import com.example.smple.ui.workouts.WorkoutViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -19,17 +23,47 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.Home.route) {
             HomeScreen(
                 viewModel = viewModel<HomeViewModel>(),
-                onEntryClick = { entryId ->
-                    navController.navigate(Screen.WorkoutDetail.createRoute(entryId))
-                },
+                onEntryClick = { /* TODO: navigate to entry detail when data layer is ready */ },
             )
         }
+
+        composable(Screen.WorkoutList.route) {
+            WorkoutListScreen(
+                viewModel = viewModel<WorkoutViewModel>(),
+                onPlanClick = { planName ->
+                    navController.navigate(Screen.WorkoutPlanDetail.createRoute(planName))
+                },
+                onNewWorkout = { /* TODO: show add-plan dialog */ },
+            )
+        }
+
+        composable(Screen.WorkoutPlanDetail.route) { backStack ->
+            val planName = backStack.arguments?.getString("planName") ?: ""
+            WorkoutPlanDetailScreen(
+                planName = planName,
+                viewModel = viewModel<WorkoutViewModel>(),
+                onCategoryClick = { category ->
+                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
+                },
+                onNewPlan = { /* TODO: add new category */ },
+            )
+        }
+
+        composable(Screen.WorkoutDetail.route) { backStack ->
+            val planName = backStack.arguments?.getString("planName") ?: ""
+            val category = backStack.arguments?.getString("category") ?: ""
+            WorkoutDetailScreen(
+                planName = planName,
+                category = category,
+                viewModel = viewModel<WorkoutViewModel>(),
+                onEditClick = { /* TODO: enter edit mode */ },
+            )
+        }
+
         composable(Screen.Onboarding.route) { /* TODO */ }
         composable(Screen.Login.route) { /* TODO */ }
         composable(Screen.SignUp.route) { /* TODO */ }
         composable(Screen.ForgotPassword.route) { /* TODO */ }
-        composable(Screen.WorkoutList.route) { /* TODO: WorkoutListScreen */ }
-        composable(Screen.WorkoutDetail.route) { /* TODO: WorkoutDetailScreen */ }
         composable(Screen.Profile.route) { /* TODO: ProfileScreen */ }
     }
 }
