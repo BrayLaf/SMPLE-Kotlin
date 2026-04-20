@@ -1,17 +1,23 @@
 package com.example.smple.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.smple.SmpleApplication
+import com.example.smple.ui.auth.AuthViewModel
+import com.example.smple.ui.auth.ForgotPasswordScreen
 import com.example.smple.ui.auth.LoginScreen
 import com.example.smple.ui.auth.OnboardingScreen
 import com.example.smple.ui.auth.SignUpScreen
 import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
 import com.example.smple.ui.profile.ProfileScreen
+import com.example.smple.ui.profile.ProfileViewModel
 import com.example.smple.ui.workouts.WorkoutDetailScreen
 import com.example.smple.ui.workouts.WorkoutListScreen
 import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
@@ -19,15 +25,24 @@ import com.example.smple.ui.workouts.WorkoutViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val startDestination = remember {
+        val app = context.applicationContext as SmpleApplication
+        if (app.authRepository.getCurrentUser() != null) Screen.Home.route
+        else Screen.Onboarding.route
+    }
+
+    val authViewModel: AuthViewModel = viewModel()
+
     NavHost(
         navController = navController,
-        startDestination = Screen.Onboarding.route,
+        startDestination = startDestination,
         modifier = modifier,
     ) {
         composable(Screen.Home.route) {
             HomeScreen(
                 viewModel = viewModel<HomeViewModel>(),
-                onEntryClick = { /* TODO: navigate to entry detail when data layer is ready */ },
+                onEntryClick = { /* TODO: navigate to entry detail */ },
             )
         }
 
@@ -37,7 +52,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 onPlanClick = { planName ->
                     navController.navigate(Screen.WorkoutPlanDetail.createRoute(planName))
                 },
-                onNewWorkout = { /* TODO: show add-plan dialog */ },
             )
         }
 
@@ -70,8 +84,10 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 onLoginClick = { navController.navigate(Screen.Login.route) },
             )
         }
+
         composable(Screen.Login.route) {
             LoginScreen(
+                viewModel = authViewModel,
                 onLoginSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
@@ -82,8 +98,10 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 onForgotPasswordClick = { navController.navigate(Screen.ForgotPassword.route) },
             )
         }
+
         composable(Screen.SignUp.route) {
             SignUpScreen(
+                viewModel = authViewModel,
                 onSignUpSuccess = {
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Onboarding.route) { inclusive = true }
@@ -93,13 +111,20 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 onLoginClick = { navController.navigate(Screen.Login.route) },
             )
         }
-        composable(Screen.ForgotPassword.route) { /* TODO */ }
+
+        composable(Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(
+                viewModel = authViewModel,
+                onBackClick = { navController.popBackStack() },
+            )
+        }
+
         composable(Screen.Profile.route) {
             ProfileScreen(
-                onUpdateInfoClick = { /* TODO: persist profile changes */ },
-                onDeleteAccountClick = {
+                viewModel = viewModel<ProfileViewModel>(),
+                onSignedOut = {
                     navController.navigate(Screen.Onboarding.route) {
-                        popUpTo(Screen.Home.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                         launchSingleTop = true
                     }
                 },

@@ -1,14 +1,12 @@
 package com.example.smple.data.repository
 
 import com.example.smple.domain.model.Entry
-import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+import java.time.YearMonth
 
 interface EntryRepository {
-    // TODO: fun getEntries(): Flow<List<Entry>>
-    // TODO: fun getEntriesByCategory(category: String): Flow<List<Entry>>
-    // TODO: suspend fun getEntry(id: Int): Entry?
-    // TODO: suspend fun createEntry(entry: Entry): Result<Entry>
-    // TODO: suspend fun updateEntry(entry: Entry): Result<Entry>
-    // TODO: suspend fun deleteEntry(id: Int): Result<Unit>
-    // TODO: suspend fun syncWithRemote()
+    suspend fun getEntriesForDate(userId: String, date: LocalDate): List<Entry>
+    suspend fun getTrainingDays(userId: String, month: YearMonth): Set<LocalDate>
+    suspend fun createEntry(entry: Entry): Result<Unit>
+    suspend fun deleteEntry(id: Int): Result<Unit>
 }

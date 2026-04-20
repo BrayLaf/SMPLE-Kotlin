@@ -10,43 +10,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.R
 
 @Composable
 fun ProfileScreen(
-    onUpdateInfoClick: () -> Unit,
-    onDeleteAccountClick: () -> Unit,
+    viewModel: ProfileViewModel,
+    onSignedOut: () -> Unit,
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    val user by viewModel.currentUser.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -65,8 +53,7 @@ fun ProfileScreen(
         DecorativeTopRightLine(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(top = 52.dp),
+                .padding(top = 80.dp),
         )
 
         Column(
@@ -85,50 +72,35 @@ fun ProfileScreen(
                 color = Color.Black,
             )
 
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            ProfileField(
-                value = name,
-                onValueChange = { name = it },
-                hint = stringResource(R.string.name_hint),
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next,
-            )
+            if (user != null) {
+                Text(
+                    text = user!!.email,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black.copy(alpha = 0.7f),
+                    modifier = Modifier.align(Alignment.Start),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "ID: ${user!!.id.take(8)}…",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Black.copy(alpha = 0.4f),
+                    modifier = Modifier.align(Alignment.Start),
+                )
+            }
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            ProfileField(
-                value = email,
-                onValueChange = { email = it },
-                hint = stringResource(R.string.email_hint),
-                keyboardType = KeyboardType.Email,
-                imeAction = ImeAction.Next,
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            ProfileField(
-                value = password,
-                onValueChange = { password = it },
-                hint = stringResource(R.string.password_hint),
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done,
-                isPassword = true,
-            )
-
-            Spacer(modifier = Modifier.height(44.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
             OutlinedButton(
-                onClick = onUpdateInfoClick,
+                onClick = { viewModel.signOut(onSignedOut) },
                 shape = RoundedCornerShape(28.dp),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.9f)),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
                 Text(
-                    text = stringResource(R.string.update_info),
+                    text = "Sign Out",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = Color.White,
                 )
@@ -137,15 +109,10 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = onDeleteAccountClick,
+                onClick = { viewModel.deleteAccount(onSignedOut) },
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
                 Text(
                     text = stringResource(R.string.delete_account),
@@ -154,39 +121,6 @@ fun ProfileScreen(
             }
         }
     }
-}
-
-@Composable
-private fun ProfileField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    hint: String,
-    keyboardType: KeyboardType,
-    imeAction: ImeAction,
-    isPassword: Boolean = false,
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        singleLine = true,
-        textStyle = TextStyle(color = Color(0xFF222222)),
-        visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
-        placeholder = {
-            Text(text = hint, color = Color(0xFF6D6D6D))
-        },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = imeAction,
-        ),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color(0x804C4C4C),
-            unfocusedIndicatorColor = Color(0x804C4C4C),
-        ),
-        modifier = Modifier.fillMaxWidth(),
-    )
 }
 
 @Composable

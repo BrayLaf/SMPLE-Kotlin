@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "entries")
 data class EntryEntity(
     @PrimaryKey val id: Int = 0,
-    val userId: Int = 0,
+    val userId: String = "",
     val title: String = "",
     val content: String = "",
     val category: String = "",

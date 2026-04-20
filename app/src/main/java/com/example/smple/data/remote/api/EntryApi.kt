@@ -1,12 +1,11 @@
 package com.example.smple.data.remote.api
 
 import com.example.smple.data.remote.dto.EntryDto
+import com.example.smple.data.remote.dto.EntryInsertDto
 
 interface EntryApi {
-    // TODO: suspend fun getEntries(userId: Int): List<EntryDto>
-    // TODO: suspend fun getEntriesByCategory(userId: Int, category: String): List<EntryDto>
-    // TODO: suspend fun getEntry(id: Int): EntryDto
-    // TODO: suspend fun createEntry(entry: EntryDto): EntryDto
-    // TODO: suspend fun updateEntry(entry: EntryDto): EntryDto
-    // TODO: suspend fun deleteEntry(id: Int)
+    suspend fun getEntriesForDate(userId: String, start: String, end: String): List<EntryDto>
+    suspend fun getEntriesForMonth(userId: String, start: String, end: String): List<EntryDto>
+    suspend fun createEntry(entry: EntryInsertDto)
+    suspend fun deleteEntry(id: Int)
 }

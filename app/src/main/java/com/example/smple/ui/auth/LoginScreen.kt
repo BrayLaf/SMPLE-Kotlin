@@ -1,5 +1,6 @@
 package com.example.smple.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,13 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.Image
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -26,8 +28,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -41,16 +43,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.R
 
 @Composable
 fun LoginScreen(
+    viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onSignUpClick: () -> Unit,
     onForgotPasswordClick: () -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isLoading = uiState is AuthViewModel.UiState.Loading
 
     Box(
         modifier = Modifier
@@ -83,11 +89,8 @@ fun LoginScreen(
                     .fillMaxWidth(0.55f)
                     .height(64.dp),
             )
-
             DecorativeBarsTopRight(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 20.dp)
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 20.dp)
             )
         }
 
@@ -109,9 +112,7 @@ fun LoginScreen(
         )
 
         DecorativeBarsBottomLeft(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(bottom = 22.dp)
+            modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 22.dp)
         )
 
         Column(
@@ -125,19 +126,11 @@ fun LoginScreen(
 
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { email = it; viewModel.clearError() },
                 singleLine = true,
                 textStyle = TextStyle(color = Color(0xFF222222)),
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.email_hint),
-                        color = Color(0xFFB9B9B9),
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
+                placeholder = { Text(text = stringResource(R.string.email_hint), color = Color(0xFFB9B9B9)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -152,20 +145,12 @@ fun LoginScreen(
 
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { password = it; viewModel.clearError() },
                 singleLine = true,
                 textStyle = TextStyle(color = Color(0xFF222222)),
                 visualTransformation = PasswordVisualTransformation(),
-                placeholder = {
-                    Text(
-                        text = stringResource(R.string.password_hint),
-                        color = Color(0xFFB9B9B9),
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
+                placeholder = { Text(text = stringResource(R.string.password_hint), color = Color(0xFFB9B9B9)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -175,6 +160,15 @@ fun LoginScreen(
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )
+
+            if (uiState is AuthViewModel.UiState.Error) {
+                Text(
+                    text = (uiState as AuthViewModel.UiState.Error).message,
+                    color = Color(0xFFD32F2F),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp).align(Alignment.Start),
+                )
+            }
 
             Text(
                 text = stringResource(R.string.forgot_password),
@@ -189,29 +183,26 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = onLoginSuccess,
+                onClick = { viewModel.signIn(email, password, onLoginSuccess) },
+                enabled = !isLoading,
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
-                Text(
-                    text = stringResource(R.string.login),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text(
+                        text = stringResource(R.string.login),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.no_account),
-                    color = Color(0xFF262626),
-                )
+                Text(text = stringResource(R.string.no_account), color = Color(0xFF262626))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = stringResource(R.string.sign_up),
@@ -226,45 +217,16 @@ fun LoginScreen(
 
 @Composable
 private fun DecorativeBarsTopRight(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .width(186.dp)
-                .height(10.dp)
-                .background(Color.Black, RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp)),
-        )
-        Box(
-            modifier = Modifier
-                .width(132.dp)
-                .height(10.dp)
-                .background(Color.Black, RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp)),
-        )
+    Column(modifier = modifier, horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Box(modifier = Modifier.width(186.dp).height(10.dp).background(Color.Black, RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp)))
+        Box(modifier = Modifier.width(132.dp).height(10.dp).background(Color.Black, RoundedCornerShape(topStart = 18.dp, bottomStart = 18.dp)))
     }
 }
 
 @Composable
 private fun DecorativeBarsBottomLeft(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .width(132.dp)
-                .height(10.dp)
-                .background(Color.Black, RoundedCornerShape(topEnd = 18.dp, bottomEnd = 18.dp)),
-        )
-        Box(
-            modifier = Modifier
-                .width(186.dp)
-                .height(10.dp)
-                .background(Color.Black, RoundedCornerShape(topEnd = 18.dp, bottomEnd = 18.dp)),
-        )
+    Column(modifier = modifier, horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        Box(modifier = Modifier.width(132.dp).height(10.dp).background(Color.Black, RoundedCornerShape(topEnd = 18.dp, bottomEnd = 18.dp)))
+        Box(modifier = Modifier.width(186.dp).height(10.dp).background(Color.Black, RoundedCornerShape(topEnd = 18.dp, bottomEnd = 18.dp)))
     }
 }
-

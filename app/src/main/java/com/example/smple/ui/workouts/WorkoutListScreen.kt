@@ -17,11 +17,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,16 +37,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.ui.theme.AppBackgroundGradient
+import com.example.smple.ui.theme.GreenPrimary
 import com.example.smple.ui.theme.TextDark
 
 @Composable
 fun WorkoutListScreen(
     viewModel: WorkoutViewModel,
     onPlanClick: (String) -> Unit,
-    onNewWorkout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val plans by viewModel.workoutPlans.collectAsStateWithLifecycle()
+    var showAddDialog by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize().background(AppBackgroundGradient)) {
         Column(
@@ -92,7 +101,7 @@ fun WorkoutListScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable(onClick = onNewWorkout)
+                            .clickable { showAddDialog = true }
                             .padding(vertical = 20.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -113,5 +122,43 @@ fun WorkoutListScreen(
                 item { Spacer(Modifier.height(120.dp)) }
             }
         }
+    }
+
+    if (showAddDialog) {
+        var planName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = {
+                Text(
+                    "New Workout Plan",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                OutlinedTextField(
+                    value = planName,
+                    onValueChange = { planName = it },
+                    label = { Text("Plan name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.addPlan(planName)
+                        showAddDialog = false
+                    },
+                    enabled = planName.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                ) { Text("Add") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Cancel", color = TextDark)
+                }
+            },
+        )
     }
 }
