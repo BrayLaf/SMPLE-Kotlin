@@ -13,7 +13,7 @@ import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
 import com.example.smple.ui.workouts.WorkoutDetailScreen
 import com.example.smple.ui.workouts.WorkoutListScreen
-//import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
+import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
 import com.example.smple.ui.workouts.WorkoutViewModel
 
 @Composable
@@ -40,17 +40,17 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
 
-//        composable(Screen.WorkoutPlanDetail.route) { backStack ->
-//            val planName = backStack.arguments?.getString("planName") ?: ""
-//            WorkoutPlanDetailScreen(
-//                planName = planName,
-//                viewModel = viewModel<WorkoutViewModel>(),
-//                onCategoryClick = { category ->
-//                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
-//                },
-//                onNewPlan = { /* TODO: add new category */ },
-//            )
-//        }
+        composable(Screen.WorkoutPlanDetail.route) { backStack ->
+            val planName = backStack.arguments?.getString("planName") ?: ""
+            WorkoutPlanDetailScreen(
+                planName = planName,
+                viewModel = viewModel<WorkoutViewModel>(),
+                onCategoryClick = { category ->
+                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
+                },
+                onNewPlan = { /* TODO: add new category */ },
+            )
+        }
 
         composable(Screen.WorkoutDetail.route) { backStack ->
             val planName = backStack.arguments?.getString("planName") ?: ""
