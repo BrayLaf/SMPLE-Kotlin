@@ -8,6 +8,8 @@ import com.example.smple.data.repository.AuthRepository
 import com.example.smple.data.repository.AuthRepositoryImpl
 import com.example.smple.data.repository.EntryRepository
 import com.example.smple.data.repository.EntryRepositoryImpl
+import com.example.smple.data.repository.PlanRepository
+import com.example.smple.data.repository.PlanRepositoryImpl
 
 class SmpleApplication : Application() {
 
@@ -21,4 +23,5 @@ class SmpleApplication : Application() {
 
     val authRepository: AuthRepository by lazy { AuthRepositoryImpl(supabase) }
     val entryRepository: EntryRepository by lazy { EntryRepositoryImpl(supabase) }
+    val planRepository: PlanRepository by lazy { PlanRepositoryImpl(supabase) }
 }

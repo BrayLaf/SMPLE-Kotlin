@@ -24,6 +24,15 @@ class EntryRepositoryImpl(private val supabase: SupabaseClient) : EntryRepositor
         }.decodeList<EntryDto>().map { it.toDomain() }
     }
 
+    override suspend fun getEntriesForCategory(userId: String, category: String): List<Entry> {
+        return supabase.from("entries").select {
+            filter {
+                eq("user_id", userId)
+                eq("category", category)
+            }
+        }.decodeList<EntryDto>().map { it.toDomain() }
+    }
+
     override suspend fun getTrainingDays(userId: String, month: YearMonth): Set<LocalDate> {
         val start = "${month.atDay(1)}T00:00:00"
         val end = "${month.atEndOfMonth().plusDays(1)}T00:00:00"
@@ -40,6 +49,12 @@ class EntryRepositoryImpl(private val supabase: SupabaseClient) : EntryRepositor
                 }.getOrNull()
             }
             .toSet()
+    }
+
+    override suspend fun getEntryById(id: Int): Entry? {
+        return supabase.from("entries").select {
+            filter { eq("id", id) }
+        }.decodeList<EntryDto>().firstOrNull()?.toDomain()
     }
 
     override suspend fun createEntry(entry: Entry): Result<Unit> = runCatching {

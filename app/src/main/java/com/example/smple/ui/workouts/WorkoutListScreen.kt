@@ -36,8 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.smple.domain.model.Plan
 import com.example.smple.ui.theme.AppBackgroundGradient
-import com.example.smple.ui.theme.GreenPrimary
 import com.example.smple.ui.theme.TextDark
 
 @Composable
@@ -46,7 +46,7 @@ fun WorkoutListScreen(
     onPlanClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val plans by viewModel.workoutPlans.collectAsStateWithLifecycle()
+    val plans by viewModel.plans.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize().background(AppBackgroundGradient)) {
@@ -83,18 +83,29 @@ fun WorkoutListScreen(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp),
             ) {
-                items(plans) { plan ->
-                    Text(
-                        text = plan,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextDark,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .background(Color.White.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
-                            .clickable { onPlanClick(plan) }
-                            .padding(horizontal = 20.dp, vertical = 20.dp),
-                    )
+                if (plans.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No workout plans yet. Add one below.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextDark.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(vertical = 12.dp),
+                        )
+                    }
+                } else {
+                    items(plans) { plan ->
+                        Text(
+                            text = plan.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextDark,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp)
+                                .background(Color.White.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
+                                .clickable { onPlanClick(plan.id) }
+                                .padding(horizontal = 20.dp, vertical = 20.dp),
+                        )
+                    }
                 }
 
                 item {

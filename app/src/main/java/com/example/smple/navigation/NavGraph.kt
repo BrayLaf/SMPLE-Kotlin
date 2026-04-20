@@ -49,30 +49,27 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(Screen.WorkoutList.route) {
             WorkoutListScreen(
                 viewModel = viewModel<WorkoutViewModel>(),
-                onPlanClick = { planName ->
-                    navController.navigate(Screen.WorkoutPlanDetail.createRoute(planName))
+                onPlanClick = { planId ->
+                    navController.navigate(Screen.WorkoutPlanDetail.createRoute(planId))
                 },
             )
         }
 
         composable(Screen.WorkoutPlanDetail.route) { backStack ->
-            val planName = backStack.arguments?.getString("planName") ?: ""
+            val planId = backStack.arguments?.getString("planId") ?: ""
             WorkoutPlanDetailScreen(
-                planName = planName,
+                planId = planId,
                 viewModel = viewModel<WorkoutViewModel>(),
-                onCategoryClick = { category ->
-                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
+                onWorkoutClick = { entryId ->
+                    navController.navigate(Screen.WorkoutDetail.createRoute(entryId))
                 },
-                onNewPlan = { /* TODO: add new category */ },
             )
         }
 
         composable(Screen.WorkoutDetail.route) { backStack ->
-            val planName = backStack.arguments?.getString("planName") ?: ""
-            val category = backStack.arguments?.getString("category") ?: ""
+            val entryId = backStack.arguments?.getString("entryId")?.toIntOrNull() ?: -1
             WorkoutDetailScreen(
-                planName = planName,
-                category = category,
+                entryId = entryId,
                 viewModel = viewModel<WorkoutViewModel>(),
                 onEditClick = { /* TODO: enter edit mode */ },
             )

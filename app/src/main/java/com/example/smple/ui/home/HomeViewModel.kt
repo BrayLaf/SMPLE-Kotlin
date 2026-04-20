@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.smple.SmpleApplication
 import com.example.smple.domain.model.Entry
+import com.example.smple.domain.model.Plan
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val entryRepo = (application as SmpleApplication).entryRepository
     private val authRepo = (application as SmpleApplication).authRepository
+    private val planRepo = (application as SmpleApplication).planRepository
 
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth: StateFlow<YearMonth> = _currentMonth.asStateFlow()
@@ -31,6 +33,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _trainingDays = MutableStateFlow<Set<LocalDate>>(emptySet())
     val trainingDays: StateFlow<Set<LocalDate>> = _trainingDays.asStateFlow()
 
+    private val _plans = MutableStateFlow<List<Plan>>(emptyList())
+    val plans: StateFlow<List<Plan>> = _plans.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -39,6 +44,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     init {
         loadEntriesForDate(LocalDate.now())
         loadTrainingDays(YearMonth.now())
+        loadPlans()
     }
 
     fun selectDate(date: LocalDate) {
@@ -60,6 +66,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun loadPlans() {
+        viewModelScope.launch {
+            val userId = authRepo.getCurrentUser()?.id ?: return@launch
+            _plans.value = planRepo.getPlans(userId)
+        }
+    }
+
     fun previousMonth() {
         _currentMonth.update { it.minusMonths(1) }
         loadTrainingDays(_currentMonth.value)
@@ -70,7 +83,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         loadTrainingDays(_currentMonth.value)
     }
 
-    fun logWorkout(date: LocalDate, category: String, notes: String) {
+    fun logWorkout(date: LocalDate, plan: Plan, notes: String) {
         viewModelScope.launch {
             val userId = authRepo.getCurrentUser()?.id
             if (userId == null) {
@@ -80,8 +93,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             val epochMillis = date.atTime(12, 0).toInstant(ZoneOffset.UTC).toEpochMilli()
             val entry = Entry(
                 userId = userId,
-                title = "$category workout",
-                category = category,
+                title = plan.name,
+                category = plan.id,
                 content = notes,
                 createdAt = epochMillis,
             )
@@ -89,6 +102,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 .onSuccess {
                     loadEntriesForDate(_selectedDate.value)
                     loadTrainingDays(_currentMonth.value)
+                    loadPlans()
                 }
                 .onFailure { _error.value = "Failed to save workout: ${it.message}" }
         }

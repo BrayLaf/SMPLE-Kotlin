@@ -16,12 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.domain.model.Entry
+import com.example.smple.domain.model.Plan
 import com.example.smple.ui.theme.AppBackgroundGradient
 import com.example.smple.ui.theme.GreenPrimary
 import com.example.smple.ui.theme.TextDark
@@ -63,6 +65,7 @@ fun HomeScreen(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
     val entries by viewModel.entries.collectAsStateWithLifecycle()
     val trainingDays by viewModel.trainingDays.collectAsStateWithLifecycle()
+    val plans by viewModel.plans.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
     var showLogDialog by remember { mutableStateOf(false) }
@@ -175,9 +178,10 @@ fun HomeScreen(
     if (showLogDialog) {
         LogWorkoutDialog(
             date = selectedDate,
+            plans = plans,
             onDismiss = { showLogDialog = false },
-            onLog = { category, notes ->
-                viewModel.logWorkout(selectedDate, category, notes)
+            onLog = { plan, notes ->
+                viewModel.logWorkout(selectedDate, plan, notes)
                 showLogDialog = false
             },
         )
@@ -211,11 +215,11 @@ private fun CalendarSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onPreviousMonth) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous month", tint = TextDark)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous month", tint = TextDark)
             }
             Text(text = monthLabel, style = MaterialTheme.typography.bodyMedium, color = TextDark)
             IconButton(onClick = onNextMonth) {
-                Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next month", tint = TextDark)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next month", tint = TextDark)
             }
         }
 
@@ -330,12 +334,21 @@ private fun EntryRow(entry: Entry, onClick: () -> Unit, onDelete: () -> Unit) {
 @Composable
 private fun LogWorkoutDialog(
     date: LocalDate,
+    plans: List<Plan>,
     onDismiss: () -> Unit,
-    onLog: (category: String, notes: String) -> Unit,
+    onLog: (Plan, String) -> Unit,
 ) {
-    var selectedCategory by remember { mutableStateOf("Push") }
+    var selectedPlanId by remember { mutableStateOf(plans.firstOrNull()?.id.orEmpty()) }
     var notes by remember { mutableStateOf("") }
     val formatter = DateTimeFormatter.ofPattern("MMMM d")
+
+    androidx.compose.runtime.LaunchedEffect(plans) {
+        if (plans.isNotEmpty() && plans.none { it.id == selectedPlanId }) {
+            selectedPlanId = plans.first().id
+        }
+    }
+
+    val selectedPlan = plans.firstOrNull { it.id == selectedPlanId }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -349,23 +362,31 @@ private fun LogWorkoutDialog(
         text = {
             Column {
                 Text(
-                    text = "Category",
+                    text = "Workout Plan",
                     style = MaterialTheme.typography.labelSmall,
                     color = TextDark.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
-                Row {
-                    listOf("Push", "Pull", "Legs").forEach { cat ->
+                if (plans.isEmpty()) {
+                    Text(
+                        text = "Add a workout plan in the Workouts tab before logging a workout.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextDark.copy(alpha = 0.6f),
+                    )
+                } else {
+                    LazyRow {
+                        items(plans) { plan ->
                         FilterChip(
-                            selected = selectedCategory == cat,
-                            onClick = { selectedCategory = cat },
-                            label = { Text(cat, style = MaterialTheme.typography.labelSmall) },
+                            selected = selectedPlanId == plan.id,
+                            onClick = { selectedPlanId = plan.id },
+                            label = { Text(plan.name, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = GreenPrimary,
                                 selectedLabelColor = Color.White,
                             ),
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -380,7 +401,8 @@ private fun LogWorkoutDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onLog(selectedCategory, notes) },
+                onClick = { selectedPlan?.let { onLog(it, notes) } },
+                enabled = selectedPlan != null,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
             ) {
                 Text("Log Workout")

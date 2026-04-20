@@ -1,47 +1,63 @@
 package com.example.smple.ui.workouts
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.smple.SmpleApplication
+import com.example.smple.domain.model.Entry
+import com.example.smple.domain.model.Plan
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
-class WorkoutViewModel : ViewModel() {
+class WorkoutViewModel(application: Application) : AndroidViewModel(application) {
 
-    // TODO: inject EntryRepository when DI is set up
+    private val entryRepo = (application as SmpleApplication).entryRepository
+    private val authRepo = (application as SmpleApplication).authRepository
+    private val planRepo = (application as SmpleApplication).planRepository
 
-    private val _workoutPlans = MutableStateFlow(listOf("Workout 1", "Workout 2"))
-    val workoutPlans: StateFlow<List<String>> = _workoutPlans.asStateFlow()
+    private val _plans = MutableStateFlow<List<Plan>>(emptyList())
+    val plans: StateFlow<List<Plan>> = _plans.asStateFlow()
 
-    val categories: StateFlow<List<String>> = MutableStateFlow(listOf("Push", "Pull", "Legs"))
+    private val _workouts = MutableStateFlow<List<Entry>>(emptyList())
+    val workouts: StateFlow<List<Entry>> = _workouts.asStateFlow()
 
-    // Placeholder exercises keyed by category — replace with repo data later
-    private val sampleExercises = mapOf(
-        "Push" to listOf(
-            "Bench 3x12 (225)",
-            "Dips 4x10 (45)",
-            "Push Ups 10x10 (body weight)",
-            "Bench 3x12 (225)",
-        ),
-        "Pull" to listOf(
-            "Pull Ups 4x8 (body weight)",
-            "Barbell Row 3x12 (135)",
-            "Curl 3x10 (35)",
-        ),
-        "Legs" to listOf(
-            "Squat 4x8 (315)",
-            "Leg Press 3x12 (360)",
-            "Calf Raises 4x15 (body weight)",
-        ),
-    )
+    private val _selectedWorkout = MutableStateFlow<Entry?>(null)
+    val selectedWorkout: StateFlow<Entry?> = _selectedWorkout.asStateFlow()
 
-    private val _exercises = MutableStateFlow<List<String>>(emptyList())
-    val exercises: StateFlow<List<String>> = _exercises.asStateFlow()
+    init {
+        loadPlans()
+    }
 
-    fun loadExercises(category: String) {
-        _exercises.value = sampleExercises[category] ?: emptyList()
+    fun loadPlans() {
+        viewModelScope.launch {
+            val userId = authRepo.getCurrentUser()?.id ?: return@launch
+            _plans.value = planRepo.getPlans(userId)
+        }
     }
 
     fun addPlan(name: String) {
-        if (name.isNotBlank()) _workoutPlans.value = _workoutPlans.value + name
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+
+        viewModelScope.launch {
+            val userId = authRepo.getCurrentUser()?.id ?: return@launch
+            planRepo.createPlan(userId, trimmed)
+                .onSuccess { loadPlans() }
+        }
+    }
+
+    fun loadWorkouts(planId: String) {
+        viewModelScope.launch {
+            val userId = authRepo.getCurrentUser()?.id ?: return@launch
+            _workouts.value = entryRepo.getEntriesForCategory(userId, planId)
+        }
+    }
+
+    fun loadWorkout(entryId: Int) {
+        viewModelScope.launch {
+            _selectedWorkout.value = entryRepo.getEntryById(entryId)
+        }
     }
 }
