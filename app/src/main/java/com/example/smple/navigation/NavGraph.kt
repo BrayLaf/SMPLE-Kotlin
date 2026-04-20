@@ -6,6 +6,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.smple.ui.auth.LoginScreen
 import com.example.smple.ui.auth.OnboardingScreen
 import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
@@ -67,7 +68,18 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                 onLoginClick = { navController.navigate(Screen.Login.route) },
             )
         }
-        composable(Screen.Login.route) { /* TODO */ }
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onSignUpClick = { navController.navigate(Screen.SignUp.route) },
+                onForgotPasswordClick = { navController.navigate(Screen.ForgotPassword.route) },
+            )
+        }
         composable(Screen.SignUp.route) { /* TODO */ }
         composable(Screen.ForgotPassword.route) { /* TODO */ }
         composable(Screen.Profile.route) { /* TODO: ProfileScreen */ }
