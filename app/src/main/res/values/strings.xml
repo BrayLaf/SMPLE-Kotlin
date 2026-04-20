@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SMPLE</string>
+    <string name="onboarding_tagline">Welcome to a more\nsimple way to workout</string>
+    <string name="login">Login</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="smple_logo_content_description">SMPLE logo</string>
 </resources>

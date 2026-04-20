@@ -6,18 +6,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.smple.ui.auth.OnboardingScreen
 import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
 import com.example.smple.ui.workouts.WorkoutDetailScreen
 import com.example.smple.ui.workouts.WorkoutListScreen
-import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
+//import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
 import com.example.smple.ui.workouts.WorkoutViewModel
 
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Onboarding.route,
         modifier = modifier,
     ) {
         composable(Screen.Home.route) {
@@ -37,17 +38,17 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.WorkoutPlanDetail.route) { backStack ->
-            val planName = backStack.arguments?.getString("planName") ?: ""
-            WorkoutPlanDetailScreen(
-                planName = planName,
-                viewModel = viewModel<WorkoutViewModel>(),
-                onCategoryClick = { category ->
-                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
-                },
-                onNewPlan = { /* TODO: add new category */ },
-            )
-        }
+//        composable(Screen.WorkoutPlanDetail.route) { backStack ->
+//            val planName = backStack.arguments?.getString("planName") ?: ""
+//            WorkoutPlanDetailScreen(
+//                planName = planName,
+//                viewModel = viewModel<WorkoutViewModel>(),
+//                onCategoryClick = { category ->
+//                    navController.navigate(Screen.WorkoutDetail.createRoute(planName, category))
+//                },
+//                onNewPlan = { /* TODO: add new category */ },
+//            )
+//        }
 
         composable(Screen.WorkoutDetail.route) { backStack ->
             val planName = backStack.arguments?.getString("planName") ?: ""
@@ -60,7 +61,12 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.Onboarding.route) { /* TODO */ }
+        composable(Screen.Onboarding.route) {
+            OnboardingScreen(
+                onSignUpClick = { navController.navigate(Screen.SignUp.route) },
+                onLoginClick = { navController.navigate(Screen.Login.route) },
+            )
+        }
         composable(Screen.Login.route) { /* TODO */ }
         composable(Screen.SignUp.route) { /* TODO */ }
         composable(Screen.ForgotPassword.route) { /* TODO */ }
