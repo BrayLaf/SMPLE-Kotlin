@@ -5,7 +5,10 @@
     <string name="sign_up">Sign Up</string>
     <string name="smple_logo_content_description">SMPLE logo</string>
     <string name="email_hint">Email...</string>
+    <string name="name_hint">Name...</string>
     <string name="password_hint">Password...</string>
+    <string name="confirm_password_hint">Confirm Password...</string>
     <string name="forgot_password">Forgot Password?</string>
     <string name="no_account">Don\'t have an account?</string>
+    <string name="already_account">Already have an account?</string>
 </resources>
