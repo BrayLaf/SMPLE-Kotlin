@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:insetLeft="0dp"
+    android:insetTop="8dp"
+    android:insetRight="0dp"
+    android:insetBottom="8dp"
+    android:drawable="@drawable/smple_logo" />
+
+
+
+
+

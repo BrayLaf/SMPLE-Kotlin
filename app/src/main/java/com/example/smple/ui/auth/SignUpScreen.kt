@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.R
 
@@ -185,9 +186,9 @@ private fun AuthField(value: String, onValueChange: (String) -> Unit, hint: Stri
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        textStyle = TextStyle(color = Color(0xFF222222)),
+        textStyle = TextStyle(color = Color(0xFF222222), fontSize = 20.sp),
         visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
-        placeholder = { Text(text = hint, color = Color(0xFFB9B9B9)) },
+        placeholder = { Text(text = hint, color = Color(0xFFB9B9B9), fontSize = 20.sp) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,

@@ -43,6 +43,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.R
 
@@ -51,7 +52,6 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
     onSignUpClick: () -> Unit,
-    onForgotPasswordClick: () -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -128,8 +128,14 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { email = it; viewModel.clearError() },
                 singleLine = true,
-                textStyle = TextStyle(color = Color(0xFF222222)),
-                placeholder = { Text(text = stringResource(R.string.email_hint), color = Color(0xFFB9B9B9)) },
+                textStyle = TextStyle(color = Color(0xFF222222), fontSize = 20.sp),
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.email_hint),
+                        color = Color(0xFFB9B9B9),
+                        fontSize = 20.sp,
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -147,9 +153,15 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it; viewModel.clearError() },
                 singleLine = true,
-                textStyle = TextStyle(color = Color(0xFF222222)),
+                textStyle = TextStyle(color = Color(0xFF222222), fontSize = 20.sp),
                 visualTransformation = PasswordVisualTransformation(),
-                placeholder = { Text(text = stringResource(R.string.password_hint), color = Color(0xFFB9B9B9)) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.password_hint),
+                        color = Color(0xFFB9B9B9),
+                        fontSize = 20.sp,
+                    )
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
@@ -170,17 +182,7 @@ fun LoginScreen(
                 )
             }
 
-            Text(
-                text = stringResource(R.string.forgot_password),
-                color = Color(0xFF1E1E1E),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(top = 8.dp)
-                    .clickable(onClick = onForgotPasswordClick),
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(56.dp))
 
             Button(
                 onClick = { viewModel.signIn(email, password, onLoginSuccess) },

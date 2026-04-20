@@ -10,7 +10,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.smple.SmpleApplication
 import com.example.smple.ui.auth.AuthViewModel
-import com.example.smple.ui.auth.ForgotPasswordScreen
 import com.example.smple.ui.auth.LoginScreen
 import com.example.smple.ui.auth.OnboardingScreen
 import com.example.smple.ui.auth.SignUpScreen
@@ -92,7 +91,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
                     }
                 },
                 onSignUpClick = { navController.navigate(Screen.SignUp.route) },
-                onForgotPasswordClick = { navController.navigate(Screen.ForgotPassword.route) },
             )
         }
 
@@ -109,12 +107,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
 
-        composable(Screen.ForgotPassword.route) {
-            ForgotPasswordScreen(
-                viewModel = authViewModel,
-                onBackClick = { navController.popBackStack() },
-            )
-        }
 
         composable(Screen.Profile.route) {
             ProfileScreen(
