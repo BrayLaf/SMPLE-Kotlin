@@ -11,6 +11,7 @@ import com.example.smple.ui.auth.OnboardingScreen
 import com.example.smple.ui.auth.SignUpScreen
 import com.example.smple.ui.home.HomeScreen
 import com.example.smple.ui.home.HomeViewModel
+import com.example.smple.ui.profile.ProfileScreen
 import com.example.smple.ui.workouts.WorkoutDetailScreen
 import com.example.smple.ui.workouts.WorkoutListScreen
 //import com.example.smple.ui.workouts.WorkoutPlanDetailScreen
@@ -93,6 +94,16 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             )
         }
         composable(Screen.ForgotPassword.route) { /* TODO */ }
-        composable(Screen.Profile.route) { /* TODO: ProfileScreen */ }
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                onUpdateInfoClick = { /* TODO: persist profile changes */ },
+                onDeleteAccountClick = {
+                    navController.navigate(Screen.Onboarding.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+            )
+        }
     }
 }
