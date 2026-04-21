@@ -36,6 +36,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _plans = MutableStateFlow<List<Plan>>(emptyList())
     val plans: StateFlow<List<Plan>> = _plans.asStateFlow()
 
+    private val _dialogPlanEntries = MutableStateFlow<List<Entry>>(emptyList())
+    val dialogPlanEntries: StateFlow<List<Entry>> = _dialogPlanEntries.asStateFlow()
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -73,6 +76,12 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadDialogPlanEntries(planId: String) {
+        viewModelScope.launch {
+            _dialogPlanEntries.value = entryRepo.getEntriesForPlan(planId)
+        }
+    }
+
     fun previousMonth() {
         _currentMonth.update { it.minusMonths(1) }
         loadTrainingDays(_currentMonth.value)
@@ -83,7 +92,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         loadTrainingDays(_currentMonth.value)
     }
 
-    fun logWorkout(date: LocalDate, plan: Plan, notes: String) {
+    fun logWorkout(date: LocalDate, planId: String, entryTitle: String, notes: String) {
         viewModelScope.launch {
             val userId = authRepo.getCurrentUser()?.id
             if (userId == null) {
@@ -93,16 +102,17 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             val epochMillis = date.atTime(12, 0).toInstant(ZoneOffset.UTC).toEpochMilli()
             val entry = Entry(
                 userId = userId,
-                title = plan.name,
-                category = plan.id,
+                planId = null,
+                title = entryTitle,
+                category = "",
                 content = notes,
+                scheduledDate = date,
                 createdAt = epochMillis,
             )
             entryRepo.createEntry(entry)
                 .onSuccess {
                     loadEntriesForDate(_selectedDate.value)
                     loadTrainingDays(_currentMonth.value)
-                    loadPlans()
                 }
                 .onFailure { _error.value = "Failed to save workout: ${it.message}" }
         }

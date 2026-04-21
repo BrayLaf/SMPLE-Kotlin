@@ -128,7 +128,7 @@ private fun LogoLockup() {
         contentScale = ContentScale.Fit,
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp),
+            .height(140.dp),
     )
 }
 

@@ -86,8 +86,8 @@ fun LoginScreen(
                 modifier = Modifier
                     .align(Alignment.TopStart)
                     .padding(start = 20.dp, top = 10.dp)
-                    .fillMaxWidth(0.55f)
-                    .height(64.dp),
+                    .fillMaxWidth(0.72f)
+                    .height(90.dp),
             )
             DecorativeBarsTopRight(
                 modifier = Modifier.align(Alignment.TopEnd).padding(top = 20.dp)

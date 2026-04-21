@@ -23,6 +23,12 @@ class PlanRepositoryImpl(private val supabase: SupabaseClient) : PlanRepository 
         )
         supabase.from("plans").insert(dto)
     }
+
+    override suspend fun deletePlan(id: String): Result<Unit> = runCatching {
+        supabase.from("plans").delete {
+            filter { eq("id", id) }
+        }
+    }
 }
 
 

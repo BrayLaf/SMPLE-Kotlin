@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.smple.domain.model.Plan
 import com.example.smple.ui.theme.AppBackgroundGradient
 import com.example.smple.ui.theme.TextDark
+import androidx.compose.material3.AlertDialog
 
 @Composable
 fun WorkoutListScreen(
@@ -47,6 +48,7 @@ fun WorkoutListScreen(
     modifier: Modifier = Modifier,
 ) {
     val plans by viewModel.plans.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize().background(AppBackgroundGradient)) {
@@ -94,17 +96,28 @@ fun WorkoutListScreen(
                     }
                 } else {
                     items(plans) { plan ->
-                        Text(
-                            text = plan.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextDark,
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 6.dp)
                                 .background(Color.White.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
                                 .clickable { onPlanClick(plan.id) }
                                 .padding(horizontal = 20.dp, vertical = 20.dp),
-                        )
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = plan.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextDark,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = "Delete",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextDark.copy(alpha = 0.4f),
+                                modifier = Modifier.clickable { viewModel.deletePlan(plan.id) },
+                            )
+                        }
                     }
                 }
 
@@ -169,6 +182,17 @@ fun WorkoutListScreen(
                 TextButton(onClick = { showAddDialog = false }) {
                     Text("Cancel", color = TextDark)
                 }
+            },
+        )
+    }
+
+    if (error != null) {
+        AlertDialog(
+            onDismissRequest = viewModel::clearError,
+            title = { Text("Error", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold) },
+            text = { Text(error!!, style = MaterialTheme.typography.bodyMedium) },
+            confirmButton = {
+                TextButton(onClick = viewModel::clearError) { Text("OK", color = TextDark) }
             },
         )
     }

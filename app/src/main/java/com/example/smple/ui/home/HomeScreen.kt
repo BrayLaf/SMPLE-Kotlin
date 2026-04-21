@@ -175,13 +175,17 @@ fun HomeScreen(
         )
     }
 
+    val dialogPlanEntries by viewModel.dialogPlanEntries.collectAsStateWithLifecycle()
+
     if (showLogDialog) {
         LogWorkoutDialog(
             date = selectedDate,
             plans = plans,
+            planEntries = dialogPlanEntries,
+            onPlanSelected = viewModel::loadDialogPlanEntries,
             onDismiss = { showLogDialog = false },
-            onLog = { plan, notes ->
-                viewModel.logWorkout(selectedDate, plan, notes)
+            onLog = { planId, entryTitle, notes ->
+                viewModel.logWorkout(selectedDate, planId, entryTitle, notes)
                 showLogDialog = false
             },
         )
@@ -307,7 +311,7 @@ private fun EntryRow(entry: Entry, onClick: () -> Unit, onDelete: () -> Unit) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = entry.title.ifBlank { entry.category },
+                text = entry.title.ifBlank { "Workout" },
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = TextDark,
@@ -335,20 +339,15 @@ private fun EntryRow(entry: Entry, onClick: () -> Unit, onDelete: () -> Unit) {
 private fun LogWorkoutDialog(
     date: LocalDate,
     plans: List<Plan>,
+    planEntries: List<Entry>,
+    onPlanSelected: (String) -> Unit,
     onDismiss: () -> Unit,
-    onLog: (Plan, String) -> Unit,
+    onLog: (planId: String, entryTitle: String, notes: String) -> Unit,
 ) {
-    var selectedPlanId by remember { mutableStateOf(plans.firstOrNull()?.id.orEmpty()) }
+    var selectedPlanId by remember { mutableStateOf("") }
+    var selectedEntry by remember { mutableStateOf<Entry?>(null) }
     var notes by remember { mutableStateOf("") }
     val formatter = DateTimeFormatter.ofPattern("MMMM d")
-
-    androidx.compose.runtime.LaunchedEffect(plans) {
-        if (plans.isNotEmpty() && plans.none { it.id == selectedPlanId }) {
-            selectedPlanId = plans.first().id
-        }
-    }
-
-    val selectedPlan = plans.firstOrNull { it.id == selectedPlanId }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -369,40 +368,83 @@ private fun LogWorkoutDialog(
                 )
                 if (plans.isEmpty()) {
                     Text(
-                        text = "Add a workout plan in the Workouts tab before logging a workout.",
+                        text = "Add a workout plan in the Workouts tab first.",
                         style = MaterialTheme.typography.bodySmall,
                         color = TextDark.copy(alpha = 0.6f),
                     )
                 } else {
                     LazyRow {
                         items(plans) { plan ->
-                        FilterChip(
-                            selected = selectedPlanId == plan.id,
-                            onClick = { selectedPlanId = plan.id },
-                            label = { Text(plan.name, style = MaterialTheme.typography.labelSmall) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = GreenPrimary,
-                                selectedLabelColor = Color.White,
-                            ),
-                        )
+                            FilterChip(
+                                selected = selectedPlanId == plan.id,
+                                onClick = {
+                                    selectedPlanId = plan.id
+                                    selectedEntry = null
+                                    notes = ""
+                                    onPlanSelected(plan.id)
+                                },
+                                label = { Text(plan.name, style = MaterialTheme.typography.labelSmall) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = GreenPrimary,
+                                    selectedLabelColor = Color.White,
+                                ),
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes / exercises") },
-                    minLines = 3,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+
+                if (selectedPlanId.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Workout",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDark.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    if (planEntries.isEmpty()) {
+                        Text(
+                            text = "No entries in this plan yet. Add entries in the Workouts tab.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextDark.copy(alpha = 0.6f),
+                        )
+                    } else {
+                        LazyRow {
+                            items(planEntries) { entry ->
+                                FilterChip(
+                                    selected = selectedEntry?.id == entry.id,
+                                    onClick = {
+                                        selectedEntry = entry
+                                        notes = entry.content
+                                    },
+                                    label = { Text(entry.title, style = MaterialTheme.typography.labelSmall) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = GreenPrimary,
+                                        selectedLabelColor = Color.White,
+                                    ),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                        }
+                    }
+                }
+
+                if (selectedEntry != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text("Notes for today") },
+                        minLines = 3,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { selectedPlan?.let { onLog(it, notes) } },
-                enabled = selectedPlan != null,
+                onClick = { onLog(selectedPlanId, selectedEntry?.title.orEmpty(), notes) },
+                enabled = selectedPlanId.isNotBlank() && selectedEntry != null,
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
             ) {
                 Text("Log Workout")

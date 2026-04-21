@@ -13,41 +13,32 @@ import java.time.ZoneOffset
 class EntryRepositoryImpl(private val supabase: SupabaseClient) : EntryRepository {
 
     override suspend fun getEntriesForDate(userId: String, date: LocalDate): List<Entry> {
-        val start = "${date}T00:00:00"
-        val end = "${date.plusDays(1)}T00:00:00"
         return supabase.from("entries").select {
             filter {
                 eq("user_id", userId)
-                gte("created_at", start)
-                lt("created_at", end)
+                eq("scheduled_date", date.toString())
             }
-        }.decodeList<EntryDto>().map { it.toDomain() }
+        }.decodeList<EntryDto>()
+            .filter { it.planId == null }
+            .map { it.toDomain() }
     }
 
-    override suspend fun getEntriesForCategory(userId: String, category: String): List<Entry> {
+    override suspend fun getEntriesForPlan(planId: String): List<Entry> {
         return supabase.from("entries").select {
-            filter {
-                eq("user_id", userId)
-                eq("category", category)
-            }
+            filter { eq("plan_id", planId) }
         }.decodeList<EntryDto>().map { it.toDomain() }
     }
 
     override suspend fun getTrainingDays(userId: String, month: YearMonth): Set<LocalDate> {
-        val start = "${month.atDay(1)}T00:00:00"
-        val end = "${month.atEndOfMonth().plusDays(1)}T00:00:00"
         return supabase.from("entries").select {
             filter {
                 eq("user_id", userId)
-                gte("created_at", start)
-                lt("created_at", end)
+                gte("scheduled_date", month.atDay(1).toString())
+                lte("scheduled_date", month.atEndOfMonth().toString())
             }
         }.decodeList<EntryDto>()
-            .mapNotNull { dto ->
-                runCatching {
-                    LocalDate.parse(dto.createdAt.substringBefore("T"))
-                }.getOrNull()
-            }
+            .filter { it.planId == null && it.scheduledDate != null }
+            .mapNotNull { runCatching { LocalDate.parse(it.scheduledDate!!) }.getOrNull() }
             .toSet()
     }
 
@@ -63,13 +54,24 @@ class EntryRepositoryImpl(private val supabase: SupabaseClient) : EntryRepositor
             .toString()
         val dto = EntryInsertDto(
             userId = entry.userId,
+            planId = entry.planId,
             title = entry.title,
             content = entry.content,
             category = entry.category,
             parsedJson = entry.parsedJson,
+            scheduledDate = entry.scheduledDate?.toString(),
             createdAt = createdAt,
         )
         supabase.from("entries").insert(dto)
+    }
+
+    override suspend fun updateEntry(id: Int, title: String, content: String): Result<Unit> = runCatching {
+        supabase.from("entries").update({
+            set("title", title)
+            set("content", content)
+        }) {
+            filter { eq("id", id) }
+        }
     }
 
     override suspend fun deleteEntry(id: Int): Result<Unit> = runCatching {
